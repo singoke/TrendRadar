@@ -1,0 +1,34 @@
+name: TrendRadar 热点监控推送
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天早上10点运行一次（UTC+8）
+  workflow_dispatch:      # 允许手动触发
+
+jobs:
+  send-trends:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 获取热点新闻数据
+        id: get_news
+        run: |
+          # 模拟生成热点内容（可以换成你自己的逻辑）
+          echo "total_titles=5" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+          echo "report_type=AI 热点监控" >> $GITHUB_OUTPUT
+          echo "text=今日AI行业主要热点：OpenAI新模型发布、Google更新Gemini、国内多厂商开启大模型竞赛。" >> $GITHUB_OUTPUT
+
+      - name: 发送飞书通知
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"message_type\": \"text\",
+              \"content\": {
+                \"total_titles\": \"${{ steps.get_news.outputs.total_titles }}\",
+                \"timestamp\": \"${{ steps.get_news.outputs.timestamp }}\",
+                \"report_type\": \"${{ steps.get_news.outputs.report_type }}\",
+                \"text\": \"${{ steps.get_news.outputs.text }}\"
+              }
+            }" \
+            ${{ secrets.FEISHU_WEBHOOK_URL }}
